@@ -23,16 +23,29 @@ conda install --yes --quiet conda-forge-ci-setup=3 conda-build pip -c conda-forg
 
 # set up the condarc
 setup_conda_rc "${FEEDSTOCK_ROOT}" "${RECIPE_ROOT}" "${CONFIG_FILE}"
+conda config --add channels rapidsai-nightly
+conda config --add channels nvidia
 
 source run_conda_forge_build_setup
 
+# Avoid redefinitions from linux-headers that cause UCX build failures
+/usr/bin/sudo -n yum remove -y glibc-headers
 
 # Install the yum requirements defined canonically in the
 # "recipe/yum_requirements.txt" file. After updating that file,
 # run "conda smithy rerender" and this line will be updated
 # automatically.
-/usr/bin/sudo -n yum install -y librdmacm-devel numactl-devel rdma-core-devel
+/usr/bin/sudo -n yum install -y numactl-devel
 
+# Retrieve OFED package
+/usr/bin/sudo -n yum install -y wget
+wget http://content.mellanox.com/ofed/MLNX_OFED-4.7-1.0.0.1/MLNX_OFED_LINUX-4.7-1.0.0.1-rhel7.7-x86_64.tgz
+tar xzf MLNX_OFED_LINUX-4.7-1.0.0.1-rhel7.7-x86_64.tgz
+# Remove firmware updater package
+rm MLNX_OFED_LINUX-4.7-1.0.0.1-rhel7.7-x86_64/RPMS/MLNX_LIBS/mlnx-fw-updater*
+# Install OFED packages
+/usr/bin/sudo -n yum localinstall -y MLNX_OFED_LINUX-4.7-1.0.0.1-rhel7.7-x86_64/RPMS/MLNX_LIBS/*.rpm
+rm -rf MLNX_OFED_LINUX-4.7-1.0.0.1-rhel7.7-x86_64 MLNX_OFED_LINUX-4.7-1.0.0.1-rhel7.7-x86_64.tgz
 
 # make the build number clobber
 make_build_number "${FEEDSTOCK_ROOT}" "${RECIPE_ROOT}" "${CONFIG_FILE}"

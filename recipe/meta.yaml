@@ -73,7 +73,6 @@ outputs:
         - {{ compiler("cxx") }}
         - {{ compiler("cuda") }}         # [cuda_compiler_version != "None"]
         - {{ cdt("libnl3") }}
-        - {{ cdt("rdma-core-devel") }}
         - {{ cdt("numactl-devel") }}
         - automake
         - autoconf
